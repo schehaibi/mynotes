@@ -21,6 +21,7 @@ void main() {
         loginRoute: (context) => const LoginView(),
         registerRoute: (context) => const RegisterView(),
         mainRoute: (context) => const NotesView(),
+        verifyEmailRoute: (context) => const VerifyEmailView(),
       }));
 }
 
@@ -52,9 +53,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-
-
-
 enum MenuAction { logout }
 
 class NotesView extends StatefulWidget {
@@ -81,9 +79,8 @@ class _NotesViewState extends State<NotesView> {
                   if (shouldLogout) {
                     await FirebaseAuth.instance.signOut();
                     if (!mounted) return;
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (route) => false);
-                    
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil(loginRoute, (route) => false);
                   }
                   break;
               }
