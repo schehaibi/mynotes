@@ -1,12 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/Views/login_view.dart';
+import 'package:mynotes/Views/notes_view.dart';
 import 'package:mynotes/Views/register_view.dart';
 import 'package:mynotes/constants/routes.dart';
-import 'package:mynotes/firebase_options.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 import 'Views/verify_email_view.dart';
-import 'dart:developer' as devtools show log;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,14 +29,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: Firebase.initializeApp(
-            options: DefaultFirebaseOptions.currentPlatform),
+        future: AuthService.firebase().initialize(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
+              final user = AuthService.firebase().currentUser;
               if (user != null) {
-                if (user.emailVerified) {
+                if (user.isEmailVerified) {
                   return const NotesView();
                 } else {
                   return const VerifyEmailView();
@@ -51,77 +48,4 @@ class HomePage extends StatelessWidget {
           }
         });
   }
-}
-
-enum MenuAction { logout }
-
-class NotesView extends StatefulWidget {
-  const NotesView({super.key});
-
-  @override
-  State<NotesView> createState() => _NotesViewState();
-}
-
-class _NotesViewState extends State<NotesView> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Main UI"),
-        actions: [
-          PopupMenuButton(
-            onSelected: (value) async {
-              switch (value) {
-                case MenuAction.logout:
-                  devtools.log("popup logout pressed");
-                  final shouldLogout = await showLogOutDialog(context);
-                  devtools.log(shouldLogout.toString());
-                  if (shouldLogout) {
-                    await FirebaseAuth.instance.signOut();
-                    if (!mounted) return;
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(loginRoute, (route) => false);
-                  }
-                  break;
-              }
-            },
-            itemBuilder: (context) {
-              return const [
-                PopupMenuItem<MenuAction>(
-                  value: MenuAction.logout,
-                  child: Text("Log out"),
-                ),
-              ];
-            },
-          )
-        ],
-      ),
-      body: const Text('Hello world'),
-    );
-  }
-}
-
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Sign out"),
-          content: const Text("are you sure you want to log out ?"),
-          actions: [
-            TextButton(
-              onPressed: (() {
-                Navigator.of(context).pop(true);
-              }),
-              child: const Text("Logout"),
-            ),
-            TextButton(
-              onPressed: (() {
-                Navigator.of(context).pop(false);
-              }),
-              child: const Text("Cancel"),
-            ),
-          ],
-        );
-      }).then((value) => value ?? false);
 }
